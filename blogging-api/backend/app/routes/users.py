@@ -1,10 +1,13 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut
 from app.database.database import get_db
+from app.utils.password import verify_password
+from app.utils.auth import create_access_token
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -32,7 +35,24 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
 
     return new_user
 
+@router.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    #Login the user by verifining their credentials and returning a JWT token
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
+    
+    #Verify password
+    if not verify_password(form_data.password, user.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
+    
+    # Gerenate new JWT token 
+    access_token = create_access_token(data={"sub": user.email})
+
+    return{"access_token": access_token, "token_type": "bearer"}
+
 @router.get("/", response_model=List[UserOut])
 def list_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     return users
+

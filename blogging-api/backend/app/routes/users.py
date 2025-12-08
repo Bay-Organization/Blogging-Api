@@ -16,7 +16,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     if existing_email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     
-    existing_username = db.query(User).filter(User.name == user_in.name).first()
+    existing_username = db.query(User).filter(User.username == user_in.name).first()
     if existing_username:
         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail="Username already taken")
     

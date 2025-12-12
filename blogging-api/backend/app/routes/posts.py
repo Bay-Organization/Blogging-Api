@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session 
 from app.schemas.post import PostOut, PostCreate 
@@ -17,3 +18,8 @@ def create_post(post_in: PostCreate, db: Session = Depends(get_db), current_user
     db.refresh(new_post)
 
     return new_post
+
+@router.get("/", response_model=List[PostOut])
+def list_posts(db: Session = Depends(get_db)):
+    # Public anyone can see posts 
+    return db.query(Post).all()

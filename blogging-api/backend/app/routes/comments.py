@@ -30,9 +30,9 @@ def create_comment(comment_in: CommentCreate, db: Session=Depends(get_db), curre
     return new_comment
 
 @router.get("/post/{post_id}", response_model=List[CommentOut])
-def list_comments_for_post(post_id: int, db: Session=Depends(get_db)):
+def list_comments_for_post(post_id: int, db: Session=Depends(get_db), limit: int = 10, skip: int = 0):
     #Retrieve comments for post 
-    comments =  db.query(Comment).filter(Comment.post_id == post_id).all()
+    comments =  db.query(Comment).filter(Comment.post_id == post_id).offset(skip).limit(limit).all()
 
     # Add author_username to each comment
     for comment in comments:

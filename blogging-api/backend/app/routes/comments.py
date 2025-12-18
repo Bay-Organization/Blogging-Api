@@ -38,7 +38,7 @@ def create_comment(comment_in: CommentCreate, db: Session=Depends(get_db), curre
     return new_comment
 
 @router.get("/post/{post_id}", response_model=List[CommentOut])
-def list_comments_for_post(post_id: int, db: Session=Depends(get_db), limit: int = 10, skip: int = 0):
+def list_comments_for_post(post_id: int, db: Session=Depends(get_db), limit: int = 10, skip: int = 0, current_user: User = Depends(get_current_user)):
     #Retrieve comments for post 
     comments =  db.query(Comment).filter(Comment.post_id == post_id).order_by(Comment.id.desc()).offset(skip).limit(limit).all()
 
@@ -62,6 +62,15 @@ def list_comments_for_post(post_id: int, db: Session=Depends(get_db), limit: int
         for row in counts
     }
 
+    my_map = {}
+    if current_user:
+        mine = (
+            db.query(Like.comment_id, Like.value)
+            .filer(Like.user_id == current_user.id, Like.comment_id.in_(comment_ids))
+            .all()
+        )
+        my_map = {cid: int(val) for cid, val in mine}
+
     # Add author_username to each comment
     for comment in comments:
         comment.author_username = comment.author.username
@@ -84,6 +93,10 @@ def update_comment(comment_id: int, comment_in: CommentCreate, db: Session = Dep
     comment.content = comment_in.content
     db.commit()
     db.refresh(comment)
+
+    comment.author_username = comment.author.username   
+    comment.like_count = 0
+    comment.dislike_count = 0
 
     return comment 
 

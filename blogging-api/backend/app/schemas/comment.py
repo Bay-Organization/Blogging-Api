@@ -12,8 +12,10 @@ class CommentOut(CommentBase):
     post_id: int
     author_username: str 
     
-    like_count = 0
-    dislike_count = 0
+    like_count: int = 0
+    dislike_count: int = 0
 
+    my_reaction: int = 0
+    
     class Config:
         config_model = ConfigDict(from_attributes=True)

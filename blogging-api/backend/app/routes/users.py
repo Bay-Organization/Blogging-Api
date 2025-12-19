@@ -20,14 +20,14 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     if existing_email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     
-    existing_username = db.query(User).filter(User.username == user_in.name).first()
+    existing_username = db.query(User).filter(User.username == user_in.username).first()
     if existing_username:
         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail="Username already taken")
     
     new_user = User(
-        username = user_in.username,
-        email = user_in.email,
-        password = hash_password(user_in.password),
+        username=user_in.username,
+        email=user_in.email,
+        hashed_password=hash_password(user_in.password),
     )
     
     db.add(new_user)
@@ -44,7 +44,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
     
     #Verify password
-    if not verify_password(form_data.password, user.password):
+    if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
     
     # Gerenate new JWT token 
